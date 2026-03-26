@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download History - YouTube Downloader</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>📜 Download History</h1>
+            <p class="subtitle">Recent downloads from this session</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/search">Search</a></li>
+                <li><a href="/history" class="active">History</a></li>
+                <li><a href="/stats">Statistics</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <section class="card">
+                <h2>📥 Recent Downloads</h2>
+                
+                {% if files %}
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                        <tr>
+                            <td>{{ file.name }}</td>
+                            <td>{{ file.size }}</td>
+                            <td>{{ file.created }}</td>
+                            <td>
+                                <a href="{{ file.url }}" class="btn btn-sm" download>Download</a>
+                                <a href="/stream/{{ file.name }}" class="btn btn-secondary btn-sm" target="_blank" style="margin-left: 5px;">Play</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <p style="font-size: 3rem; margin-bottom: 20px;">📭</p>
+                    <p>No downloads yet. Start by downloading a video from the home page!</p>
+                    <a href="/" class="btn" style="margin-top: 20px;">Go to Home</a>
+                </div>
+                {% endif %}
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(233, 69, 96, 0.1); border: 1px solid var(--highlight);">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Note:</strong> Files are automatically deleted after {{ config.FILE_EXPIRY_HOURS }} hour(s) to save space.
+                    </p>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>ℹ️ Information</h2>
+                <div style="margin-top: 15px; color: var(--text-secondary); line-height: 1.8;">
+                    <p>• This page shows files downloaded during the current server session</p>
+                    <p>• Files are stored temporarily and cleaned up automatically</p>
+                    <p>• Click "Download" to save the file to your device</p>
+                    <p>• Click "Play" to stream the video/audio in your browser</p>
+                    <p>• Maximum file retention time: {{ config.FILE_EXPIRY_HOURS }} hour(s)</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>YouTube Downloader &copy; 2024 | Built with FastAPI & yt-dlp</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                For personal use only. Respect copyright laws and YouTube's Terms of Service.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
