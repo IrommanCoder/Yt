@@ -1,7 +1,7 @@
 """
 YouTube Downloader Web Application
 FastAPI backend with yt-dlp integration
-Feature-rich retro-style UI
+Returns direct URLs for browser download with WebAssembly FFmpeg support
 """
 
 import os
@@ -71,6 +71,7 @@ class VideoInfo:
     is_playlist: bool = False
     playlist_count: int = 0
     formats: List[Dict[str, Any]] = None
+    direct_url: str = ""
     
     def __post_init__(self):
         if self.formats is None:
@@ -167,9 +168,7 @@ def format_views(count: int) -> str:
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename for safe file system usage."""
-    # Remove or replace unsafe characters
     sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
-    # Limit length
     if len(sanitized) > 200:
         sanitized = sanitized[:200]
     return sanitized.strip()
@@ -207,7 +206,6 @@ def get_video_info(url: str) -> VideoInfo:
             if info is None:
                 raise ValueError("No information extracted")
             
-            # Check if it's a playlist
             is_playlist = info.get('_type') == 'playlist'
             
             if is_playlist:
@@ -221,20 +219,26 @@ def get_video_info(url: str) -> VideoInfo:
                     description=info.get('description', '')[:500] if info.get('description') else '',
                     is_playlist=True,
                     playlist_count=len(info.get('entries', [])),
-                    formats=[]
+                    formats=[],
+                    direct_url=""
                 )
             else:
+                # Get direct URL for best quality
+                direct_url = info.get('url', '')
+                
                 # Extract available formats
                 formats = []
                 for fmt in info.get('formats', []):
                     if fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none':
                         quality = fmt.get('format_note', '') or fmt.get('resolution', '')
                         filesize = fmt.get('filesize', 0)
-                        if quality and filesize:
+                        format_url = fmt.get('url', '')
+                        if quality and format_url:
                             formats.append({
                                 'quality': quality,
                                 'filesize': filesize,
-                                'format_id': fmt.get('format_id', '')
+                                'format_id': fmt.get('format_id', ''),
+                                'url': format_url
                             })
                 
                 # Deduplicate formats by quality
@@ -255,7 +259,8 @@ def get_video_info(url: str) -> VideoInfo:
                     description=info.get('description', '')[:500] if info.get('description') else '',
                     is_playlist=False,
                     playlist_count=0,
-                    formats=unique_formats[:10]  # Limit to top 10 formats
+                    formats=unique_formats[:10],
+                    direct_url=direct_url
                 )
     except Exception as e:
         logger.error(f"Error extracting video info: {e}")
@@ -331,7 +336,6 @@ async def download_media(
             }],
         })
     else:
-        # Video download with quality selection
         quality_map = {
             '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best',
             '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
@@ -406,7 +410,6 @@ async def download_playlist(
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, lambda: _download_with_ytdl(url, ydl_opts))
         
-        # Get list of downloaded files
         for file_path in Path(output_dir).glob("*"):
             if file_path.is_file():
                 downloaded_files.append(str(file_path))
@@ -423,11 +426,9 @@ async def download_playlist(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    # Startup
     stats.start_time = time.time()
     logger.info("YouTube Downloader started")
     yield
-    # Shutdown
     logger.info("YouTube Downloader shutting down")
 
 app = FastAPI(
@@ -441,17 +442,7 @@ app = FastAPI(
 # Setup templates and static files
 # ============================================================================
 
-# Custom Jinja2 environment to avoid caching issues with complex objects
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-
-# Create custom environment with proper settings
-jinja_env = Environment(
-    loader=FileSystemLoader("templates"),
-    autoescape=select_autoescape(['html', 'xml']),
-    cache_size=0  # Disable cache to avoid the tuple/dict key issue
-)
-
-templates = Jinja2Templates(env=jinja_env)
+templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================================
@@ -487,7 +478,6 @@ async def stats_page(request: Request):
 @app.get("/history", response_class=HTMLResponse)
 async def history_page(request: Request):
     """Download history page."""
-    # Get recent downloads from the downloads folder
     download_path = Path(config.DOWNLOAD_FOLDER)
     files = []
     
@@ -517,9 +507,17 @@ async def history_page(request: Request):
         }
     })
 
+@app.get("/search", response_class=HTMLResponse)
+async def search_page(request: Request):
+    """Search page."""
+    return templates.TemplateResponse("search.html", {
+        "request": request,
+        "stats": asdict(stats)
+    })
+
 @app.get("/about", response_class=HTMLResponse)
 async def about_page(request: Request):
-    """About page with application information."""
+    """About page."""
     return templates.TemplateResponse("about.html", {
         "request": request,
         "stats": asdict(stats),
@@ -536,172 +534,123 @@ async def about_page(request: Request):
     })
 
 # ============================================================================
-# ROUTES - API ENDPOINTS
+# API ENDPOINTS
 # ============================================================================
 
 @app.post("/api/info")
-async def get_info(url: str = Form(...)):
+async def api_get_info(url: str = Form(...)):
     """Get video or playlist information."""
-    stats.searches_performed += 1
-    info = get_video_info(url)
-    return JSONResponse(content=asdict(info))
+    try:
+        info = get_video_info(url)
+        return JSONResponse(content={
+            "success": True,
+            "data": asdict(info)
+        })
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"success": False, "error": e.detail}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
 
 @app.post("/api/search")
-async def search(query: str = Form(...)):
-    """Search YouTube for videos."""
-    stats.searches_performed += 1
-    if not config.ENABLE_SEARCH:
-        raise HTTPException(status_code=403, detail="Search is disabled")
-    
-    results = search_youtube(query)
-    return JSONResponse(content=[asdict(r) for r in results])
+async def api_search(query: str = Form(...)):
+    """Search YouTube videos."""
+    try:
+        stats.searches_performed += 1
+        results = search_youtube(query)
+        return JSONResponse(content={
+            "success": True,
+            "data": [asdict(r) for r in results]
+        })
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"success": False, "error": e.detail}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
 
 @app.post("/api/download")
-async def download(
-    background_tasks: BackgroundTasks,
+async def api_download(
     url: str = Form(...),
-    quality: str = Form("720p"),
-    format_type: str = Form("video")
+    quality: str = Form(default="720p"),
+    format_type: str = Form(default="video")
 ):
-    """Download video or audio."""
+    """Download video or audio and return file URL."""
     try:
         # Get video info first
         info = get_video_info(url)
         
         if info.is_playlist:
-            # Handle playlist download
-            if not config.ENABLE_PLAYLIST:
-                raise HTTPException(status_code=403, detail="Playlist download is disabled")
-            
-            if info.playlist_count > config.MAX_PLAYLIST_SIZE:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Playlist too large. Maximum allowed: {config.MAX_PLAYLIST_SIZE} videos"
-                )
-            
-            # Create playlist directory
-            playlist_dir = os.path.join(
-                config.DOWNLOAD_FOLDER,
-                sanitize_filename(info.title)
-            )
-            Path(playlist_dir).mkdir(parents=True, exist_ok=True)
-            
-            output_pattern = os.path.join(playlist_dir, '%(title)s.%(ext)s')
-            
             stats.playlist_downloads += 1
-            
-            await download_playlist(
-                url=url,
-                quality=quality,
-                format_type=format_type,
-                output_dir=playlist_dir,
-                max_videos=config.MAX_PLAYLIST_SIZE
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Playlist download requires server-side processing"}
             )
-            
-            return JSONResponse(content={
-                'success': True,
-                'message': f'Playlist downloaded successfully ({info.playlist_count} videos)',
-                'is_playlist': True,
-                'folder': sanitize_filename(info.title)
-            })
+        
+        # Generate output filename
+        safe_title = sanitize_filename(info.title)
+        timestamp = int(time.time())
+        
+        if format_type == 'audio':
+            stats.audio_downloads += 1
+            output_filename = f"{safe_title}_{timestamp}.mp3"
         else:
-            # Handle single video download
-            safe_title = sanitize_filename(info.title)
-            extension = 'mp3' if format_type == 'audio' else 'mp4'
-            output_filename = f"{safe_title}_{int(time.time())}.{extension}"
-            output_path = os.path.join(config.DOWNLOAD_FOLDER, output_filename)
-            
-            if format_type == 'audio':
-                stats.audio_downloads += 1
-            else:
-                stats.video_downloads += 1
-            
-            stats.total_downloads += 1
-            
-            await download_media(
-                url=url,
-                quality=quality,
-                format_type=format_type,
-                output_path=output_path
-            )
-            
-            return JSONResponse(content={
-                'success': True,
-                'message': 'Download completed successfully',
-                'filename': output_filename,
-                'title': info.title,
-                'download_url': f'/download/{output_filename}'
-            })
-    
-    except HTTPException:
-        stats.errors += 1
-        raise
+            stats.video_downloads += 1
+            output_filename = f"{safe_title}_{timestamp}.mp4"
+        
+        output_path = os.path.join(config.DOWNLOAD_FOLDER, output_filename)
+        
+        # Download the file
+        await download_media(url, quality, format_type, output_path)
+        
+        stats.total_downloads += 1
+        
+        return JSONResponse(content={
+            "success": True,
+            "filename": output_filename,
+            "download_url": f"/download/{output_filename}",
+            "title": info.title,
+            "format": format_type,
+            "quality": quality
+        })
     except Exception as e:
         stats.errors += 1
-        logger.error(f"Download failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+        logger.error(f"Download error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
 
 @app.get("/api/stats")
-async def get_stats():
-    """Get current statistics."""
-    return JSONResponse(content=asdict(stats))
+async def api_get_stats():
+    """Get application statistics."""
+    return JSONResponse(content={
+        "success": True,
+        "data": asdict(stats)
+    })
 
 @app.get("/download/{filename}")
-async def serve_download(filename: str):
+async def download_file(filename: str):
     """Serve downloaded file."""
-    file_path = os.path.join(config.DOWNLOAD_FOLDER, filename)
+    file_path = Path(config.DOWNLOAD_FOLDER) / filename
     
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     
-    # Schedule cleanup after serving
-    # Note: In production, you'd want more sophisticated cleanup logic
-    
     return FileResponse(
-        path=file_path,
+        path=str(file_path),
         filename=filename,
-        media_type='application/octet-stream'
+        media_type="application/octet-stream"
     )
-
-@app.get("/stream/{filename}")
-async def stream_file(filename: str, request: Request):
-    """Stream video/audio file with range support."""
-    file_path = os.path.join(config.DOWNLOAD_FOLDER, filename)
-    
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    # Determine media type
-    if filename.endswith('.mp3'):
-        media_type = 'audio/mpeg'
-    elif filename.endswith('.mp4'):
-        media_type = 'video/mp4'
-    else:
-        media_type = 'application/octet-stream'
-    
-    return FileResponse(
-        path=file_path,
-        media_type=media_type,
-        headers={
-            'Accept-Ranges': 'bytes',
-            'Content-Disposition': f'inline; filename="{filename}"'
-        }
-    )
-
-# ============================================================================
-# BACKGROUND TASKS
-# ============================================================================
-
-@app.on_event("startup")
-async def startup_cleanup():
-    """Run initial cleanup on startup."""
-    cleanup_old_files()
-
-async def periodic_cleanup():
-    """Periodically clean up old files."""
-    while True:
-        await asyncio.sleep(3600)  # Run every hour
-        cleanup_old_files()
 
 # ============================================================================
 # MAIN ENTRY POINT
@@ -709,9 +658,20 @@ async def periodic_cleanup():
 
 if __name__ == "__main__":
     import uvicorn
+    
+    print("=" * 60)
+    print("YouTube Downloader - Web Application")
+    print("=" * 60)
+    print(f"Starting server on http://{config.HOST}:{config.PORT}")
+    print(f"Download folder: {config.DOWNLOAD_FOLDER}")
+    print(f"Max playlist size: {config.MAX_PLAYLIST_SIZE}")
+    print(f"File expiry: {config.FILE_EXPIRY_HOURS} hours")
+    print("=" * 60)
+    
     uvicorn.run(
-        app,
+        "app:app",
         host=config.HOST,
         port=config.PORT,
+        reload=False,
         log_level="info"
     )

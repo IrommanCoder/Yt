@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - YouTube Downloader</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🔍 Search YouTube</h1>
+            <p class="subtitle">Find and download videos from YouTube</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/search" class="active">Search</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/stats">Statistics</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <!-- Search Section -->
+            <section class="card" id="search-section">
+                <h2>Search Videos</h2>
+                
+                <div class="form-group">
+                    <label for="search-query">Search Query:</label>
+                    <input type="text" id="search-query" placeholder="Enter search terms..." autocomplete="off">
+                </div>
+                
+                <button id="search-btn" class="btn btn-primary">🔍 Search</button>
+                
+                <div id="search-results" class="results-grid" style="display: none;">
+                    <!-- Results will be inserted here -->
+                </div>
+                
+                <div id="search-loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Searching...</p>
+                </div>
+                
+                <div id="search-error" class="error-message" style="display: none;"></div>
+            </section>
+            
+            <!-- Info Section -->
+            <section class="card info-card">
+                <h3>💡 Tips</h3>
+                <ul>
+                    <li>Enter any keywords to search YouTube</li>
+                    <li>Click on a video to get download options</li>
+                    <li>Choose your preferred quality and format</li>
+                    <li>Downloads are temporary and auto-deleted after 1 hour</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 YouTube Downloader. For educational purposes only.</p>
+            <p>Respect copyright and terms of service.</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Search functionality
+        document.getElementById('search-btn').addEventListener('click', performSearch);
+        document.getElementById('search-query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        async function performSearch() {
+            const query = document.getElementById('search-query').value.trim();
+            const resultsDiv = document.getElementById('search-results');
+            const loadingDiv = document.getElementById('search-loading');
+            const errorDiv = document.getElementById('search-error');
+            
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+            
+            // Show loading, hide results and errors
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const formData = new FormData();
+                formData.append('query', query);
+                
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Search failed');
+                }
+                
+                const results = await response.json();
+                
+                if (results.length === 0) {
+                    showError('No results found. Try different keywords.');
+                    return;
+                }
+                
+                displayResults(results);
+                
+            } catch (error) {
+                showError(`Search error: ${error.message}`);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('search-results');
+            
+            let html = '<h3>Search Results</h3>';
+            
+            results.forEach(video => {
+                const duration = formatDuration(video.duration);
+                const views = formatViews(video.view_count);
+                
+                html += `
+                    <div class="result-item" onclick="selectVideo('${video.url}')">
+                        <div class="result-thumbnail">
+                            ${video.thumbnail ? `<img src="${video.thumbnail}" alt="${escapeHtml(video.title)}">` : '<div class="no-thumb">📹</div>'}
+                        </div>
+                        <div class="result-info">
+                            <h4>${escapeHtml(video.title)}</h4>
+                            <p class="result-meta">
+                                <span>👤 ${escapeHtml(video.uploader)}</span>
+                                <span>⏱️ ${duration}</span>
+                                <span>👁️ ${views} views</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+        
+        function selectVideo(url) {
+            // Redirect to home with the URL pre-filled
+            localStorage.setItem('selectedUrl', url);
+            window.location.href = '/';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('search-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return 'Unknown';
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hrs > 0) {
+                return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatViews(count) {
+            if (!count) return '0';
+            if (count >= 1000000) {
+                return (count / 1000000).toFixed(1) + 'M';
+            }
+            if (count >= 1000) {
+                return (count / 1000).toFixed(1) + 'K';
+            }
+            return count.toString();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Check if there's a selected URL from search
+        window.addEventListener('DOMContentLoaded', function() {
+            const selectedUrl = localStorage.getItem('selectedUrl');
+            if (selectedUrl) {
+                localStorage.removeItem('selectedUrl');
+                document.getElementById('url').value = selectedUrl;
+            }
+        });
+    </script>
+</body>
+</html>
