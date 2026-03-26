@@ -1,6 +1,20 @@
-INFO:     Started server process [3158]
+INFO:     Started server process [3780]
 INFO:     Waiting for application startup.
-2026-03-26 04:53:37,658 - app - INFO - YouTube Downloader started
+2026-03-26 04:56:59,419 - app - INFO - YouTube Downloader started
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:35320 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35338 - "POST /api/info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35342 - "POST /api/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35346 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35348 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35350 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35352 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35354 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35356 - "GET /history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35358 - "GET /about HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35360 - "GET /search HTTP/1.1" 404 Not Found
+ERROR: [generic] 'test' is not a valid URL
+2026-03-26 04:57:24,475 - app - ERROR - Error extracting video info: ERROR: [generic] 'test' is not a valid URL
+INFO:     127.0.0.1:35362 - "POST /api/info HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:35364 - "POST /api/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35368 - "GET /api/stats HTTP/1.1" 200 OK
