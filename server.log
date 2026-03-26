@@ -1,0 +1,6 @@
+INFO:     Started server process [3158]
+INFO:     Waiting for application startup.
+2026-03-26 04:53:37,658 - app - INFO - YouTube Downloader started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:35320 - "GET / HTTP/1.1" 200 OK

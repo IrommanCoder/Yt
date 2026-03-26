@@ -437,8 +437,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ============================================================================
 # Setup templates and static files
-templates = Jinja2Templates(directory="templates")
+# ============================================================================
+
+# Custom Jinja2 environment to avoid caching issues
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+# Create custom environment with proper settings
+jinja_env = Environment(
+    loader=FileSystemLoader("templates"),
+    autoescape=select_autoescape(['html', 'xml']),
+    cache_size=0  # Disable cache to avoid the tuple/dict key issue
+)
+
+templates = Jinja2Templates(env=jinja_env)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================================
