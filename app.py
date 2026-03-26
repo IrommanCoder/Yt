@@ -450,8 +450,17 @@ async def home(request: Request):
     """Home page with download form."""
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "config": config,
-        "stats": stats
+        "config": {
+            "PORT": config.PORT,
+            "HOST": config.HOST,
+            "DOWNLOAD_FOLDER": config.DOWNLOAD_FOLDER,
+            "MAX_PLAYLIST_SIZE": config.MAX_PLAYLIST_SIZE,
+            "FILE_EXPIRY_HOURS": config.FILE_EXPIRY_HOURS,
+            "ENABLE_PLAYLIST": config.ENABLE_PLAYLIST,
+            "ENABLE_SEARCH": config.ENABLE_SEARCH,
+            "MAX_FILE_SIZE_MB": config.MAX_FILE_SIZE_MB
+        },
+        "stats": asdict(stats)
     })
 
 @app.get("/stats", response_class=HTMLResponse)
@@ -459,7 +468,7 @@ async def stats_page(request: Request):
     """Statistics dashboard page."""
     return templates.TemplateResponse("stats.html", {
         "request": request,
-        "stats": stats
+        "stats": asdict(stats)
     })
 
 @app.get("/history", response_class=HTMLResponse)
@@ -482,7 +491,17 @@ async def history_page(request: Request):
     return templates.TemplateResponse("history.html", {
         "request": request,
         "files": files,
-        "stats": stats
+        "stats": asdict(stats),
+        "config": {
+            "PORT": config.PORT,
+            "HOST": config.HOST,
+            "DOWNLOAD_FOLDER": config.DOWNLOAD_FOLDER,
+            "MAX_PLAYLIST_SIZE": config.MAX_PLAYLIST_SIZE,
+            "FILE_EXPIRY_HOURS": config.FILE_EXPIRY_HOURS,
+            "ENABLE_PLAYLIST": config.ENABLE_PLAYLIST,
+            "ENABLE_SEARCH": config.ENABLE_SEARCH,
+            "MAX_FILE_SIZE_MB": config.MAX_FILE_SIZE_MB
+        }
     })
 
 @app.get("/about", response_class=HTMLResponse)
@@ -490,8 +509,17 @@ async def about_page(request: Request):
     """About page with application information."""
     return templates.TemplateResponse("about.html", {
         "request": request,
-        "stats": stats,
-        "config": config
+        "stats": asdict(stats),
+        "config": {
+            "PORT": config.PORT,
+            "HOST": config.HOST,
+            "DOWNLOAD_FOLDER": config.DOWNLOAD_FOLDER,
+            "MAX_PLAYLIST_SIZE": config.MAX_PLAYLIST_SIZE,
+            "FILE_EXPIRY_HOURS": config.FILE_EXPIRY_HOURS,
+            "ENABLE_PLAYLIST": config.ENABLE_PLAYLIST,
+            "ENABLE_SEARCH": config.ENABLE_SEARCH,
+            "MAX_FILE_SIZE_MB": config.MAX_FILE_SIZE_MB
+        }
     })
 
 # ============================================================================
