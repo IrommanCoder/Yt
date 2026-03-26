@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - YouTube Downloader</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>ℹ️ About</h1>
+            <p class="subtitle">Learn more about this application</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/search">Search</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/stats">Statistics</a></li>
+                <li><a href="/about" class="active">About</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <section class="card">
+                <h2>🎯 What is YouTube Downloader?</h2>
+                <div style="margin-top: 15px; line-height: 1.8; color: var(--text-secondary);">
+                    <p>
+                        YouTube Downloader is a free, open-source web application that allows you to download 
+                        videos and audio from YouTube in various qualities. Built with FastAPI and yt-dlp, 
+                        it provides a fast, simple, and retro-styled interface for all your downloading needs.
+                    </p>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>✨ Features</h2>
+                <div style="margin-top: 15px;">
+                    <div style="display: grid; gap: 15px;">
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">🎬</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Multiple Video Qualities</h3>
+                                <p style="color: var(--text-secondary);">Download videos in 1080p, 720p, 480p, 360p, or 240p resolution</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">🎵</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Audio Extraction</h3>
+                                <p style="color: var(--text-secondary);">Extract audio from videos as high-quality MP3 files (192kbps)</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">📋</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Playlist Support</h3>
+                                <p style="color: var(--text-secondary);">Download entire playlists (up to {{ config.MAX_PLAYLIST_SIZE }} videos at once)</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">🔍</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">YouTube Search</h3>
+                                <p style="color: var(--text-secondary);">Search YouTube directly and download without leaving the app</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">⚡</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Fast & Lightweight</h3>
+                                <p style="color: var(--text-secondary);">Built with FastAPI for blazing-fast performance and minimal resource usage</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">📱</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Responsive Design</h3>
+                                <p style="color: var(--text-secondary);">Works perfectly on desktop, tablet, and mobile devices</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <span style="font-size: 1.5rem;">🔒</span>
+                            <div>
+                                <h3 style="color: var(--highlight); margin-bottom: 5px;">Privacy Focused</h3>
+                                <p style="color: var(--text-secondary);">No registration required, no data collection, files auto-deleted</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>🛠️ Technology Stack</h2>
+                <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="background: var(--bg-color); padding: 15px; border: 1px solid var(--border-color);">
+                        <h3 style="color: var(--highlight); margin-bottom: 8px;">Backend</h3>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 20px;">
+                            <li>Python 3.x</li>
+                            <li>FastAPI</li>
+                            <li>yt-dlp</li>
+                            <li>Uvicorn</li>
+                        </ul>
+                    </div>
+                    <div style="background: var(--bg-color); padding: 15px; border: 1px solid var(--border-color);">
+                        <h3 style="color: var(--highlight); margin-bottom: 8px;">Frontend</h3>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 20px;">
+                            <li>HTML5</li>
+                            <li>CSS3</li>
+                            <li>Vanilla JavaScript</li>
+                            <li>Jinja2 Templates</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>⚖️ Legal Notice</h2>
+                <div style="margin-top: 15px; padding: 15px; background: rgba(255, 152, 0, 0.1); border: 1px solid var(--warning);">
+                    <p style="color: var(--text-secondary); line-height: 1.8;">
+                        <strong>Important:</strong> This application is intended for personal use only. 
+                        Please respect copyright laws and YouTube's Terms of Service. 
+                        Only download content that you have permission to download or that is available 
+                        under appropriate licenses (e.g., Creative Commons).
+                    </p>
+                    <p style="color: var(--text-secondary); line-height: 1.8; margin-top: 10px;">
+                        The developers of this application are not responsible for any misuse or 
+                        copyright infringement that may occur through its use.
+                    </p>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>📊 Current Statistics</h2>
+                <div style="margin-top: 15px;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.total_downloads }}</div>
+                            <div class="stat-label">Total Downloads</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.uptime }}</div>
+                            <div class="stat-label">Server Uptime</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.searches_performed }}</div>
+                            <div class="stat-label">Searches</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="/stats" class="btn btn-secondary">View Detailed Statistics</a>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>📝 Configuration</h2>
+                <div style="margin-top: 15px;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Max Playlist Size</td>
+                                <td>{{ config.MAX_PLAYLIST_SIZE }} videos</td>
+                            </tr>
+                            <tr>
+                                <td>File Expiry</td>
+                                <td>{{ config.FILE_EXPIRY_HOURS }} hour(s)</td>
+                            </tr>
+                            <tr>
+                                <td>Playlist Download</td>
+                                <td>{% if config.ENABLE_PLAYLIST %}✅ Enabled{% else %}❌ Disabled{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Search Feature</td>
+                                <td>{% if config.ENABLE_SEARCH %}✅ Enabled{% else %}❌ Disabled{% endif %}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>YouTube Downloader &copy; 2024 | Built with FastAPI & yt-dlp</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                For personal use only. Respect copyright laws and YouTube's Terms of Service.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

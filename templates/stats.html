@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics - YouTube Downloader</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>📊 Statistics</h1>
+            <p class="subtitle">Real-time download statistics and server info</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/search">Search</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/stats" class="active">Statistics</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <section class="card">
+                <h2>📈 Download Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-downloads">{{ stats.total_downloads }}</div>
+                        <div class="stat-label">Total Downloads</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="video-downloads">{{ stats.video_downloads }}</div>
+                        <div class="stat-label">Video Downloads</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="audio-downloads">{{ stats.audio_downloads }}</div>
+                        <div class="stat-label">Audio Downloads</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="playlist-downloads">{{ stats.playlist_downloads }}</div>
+                        <div class="stat-label">Playlists Downloaded</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="searches-performed">{{ stats.searches_performed }}</div>
+                        <div class="stat-label">Searches Performed</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="errors">{{ stats.errors }}</div>
+                        <div class="stat-label">Errors</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="uptime">{{ stats.uptime }}</div>
+                        <div class="stat-label">Server Uptime</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                    <button id="refresh-btn" class="btn" onclick="refreshStats()">
+                        🔄 Refresh Stats
+                    </button>
+                    <p style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                        Auto-refresh every 30 seconds
+                    </p>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>ℹ️ Server Information</h2>
+                <div style="display: grid; gap: 15px; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Server Status:</span>
+                        <span style="color: var(--success); font-weight: bold;">● Online</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Start Time:</span>
+                        <span id="start-time">{{ (stats.start_time * 1000) | int if stats.start_time > 0 else 0 }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Last Updated:</span>
+                        <span id="last-updated">Just now</span>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>📊 Usage Trends</h2>
+                <div style="margin-top: 20px; padding: 20px; background: var(--bg-color); border: 1px solid var(--border-color); text-align: center;">
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Download Format Distribution</p>
+                    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; color: var(--highlight);" id="video-percent">0%</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Videos</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; color: var(--success);" id="audio-percent">0%</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Audio</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>YouTube Downloader &copy; 2024 | Built with FastAPI & yt-dlp</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                For personal use only. Respect copyright laws and YouTube's Terms of Service.
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        function refreshStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-downloads').textContent = data.total_downloads;
+                    document.getElementById('video-downloads').textContent = data.video_downloads;
+                    document.getElementById('audio-downloads').textContent = data.audio_downloads;
+                    document.getElementById('playlist-downloads').textContent = data.playlist_downloads;
+                    document.getElementById('searches-performed').textContent = data.searches_performed;
+                    document.getElementById('errors').textContent = data.errors;
+                    document.getElementById('uptime').textContent = data.uptime;
+                    
+                    // Calculate percentages
+                    const total = data.video_downloads + data.audio_downloads;
+                    if (total > 0) {
+                        const videoPercent = Math.round((data.video_downloads / total) * 100);
+                        const audioPercent = Math.round((data.audio_downloads / total) * 100);
+                        document.getElementById('video-percent').textContent = videoPercent + '%';
+                        document.getElementById('audio-percent').textContent = audioPercent + '%';
+                    }
+                    
+                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(refreshStats, 30000);
+        
+        // Initial load
+        refreshStats();
+    </script>
+</body>
+</html>

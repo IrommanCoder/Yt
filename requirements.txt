@@ -1,3 +1,5 @@
-pyrogram
-tgcrypto
-git+https://github.com/pytube/pytube
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+jinja2>=3.1.2
+yt-dlp>=2023.11.16
+python-multipart>=0.0.6
