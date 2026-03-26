@@ -441,7 +441,7 @@ app = FastAPI(
 # Setup templates and static files
 # ============================================================================
 
-# Custom Jinja2 environment to avoid caching issues
+# Custom Jinja2 environment to avoid caching issues with complex objects
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # Create custom environment with proper settings
